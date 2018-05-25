@@ -6,7 +6,7 @@ Using Puthon 3.x.
 List of Chapters:
 
 - [x] <A href='http://nbviewer.jupyter.org/github/pedvide/ISLR_Python/blob/master/Chapter3_Linear_regression.ipynb'>Chapter 3 - Linear Regression</A>
-- [x] <A href='https://github.com/pedvide/ISLR_Python/blob/master/Chapter4_classification.ipynb'>Chapter 4 - Classification</A>
+- [x] <A href='http://nbviewer.jupyter.org/github/pedvide/ISLR_Python/blob/master/Chapter4_classification.ipynb'>Chapter 4 - Classification</A>
 - [ ] Chapter 5 - Resampling Methods
 - [ ] Chapter 6 - Linear Model Selection and Regularization
 - [ ] Chapter 7 - Moving Beyond Linearity
