@@ -1,7 +1,7 @@
 # ISLR_Python
 
 Figures, Tables and Problems from the book <A target="_blank" href='http://www-bcf.usc.edu/%7Egareth/ISL/index.html'>'An Introduction to Statistical Learning with Applications in R'</A> by James, Witten, Hastie, Tibshirani (2013).<P>
-Using Puthon 3.x.
+Using Python 3.x.
 
 List of Chapters:
 
