@@ -34,4 +34,4 @@ James, G., Witten, D., Hastie, T., Tibshirani, R. (2013). <I>An Introduction to 
 http://www-bcf.usc.edu/~gareth/ISL/index.html
 
 Hastie, T., Tibshirani, R., Friedman, J. (2009). <I>Elements of Statistical Learning</I>, Second Edition, Springer Science+Business Media, New York.
-http://statweb.stanford.edu/~tibs/ElemStatLearn/
+https://web.stanford.edu/~hastie/ElemStatLearn/
