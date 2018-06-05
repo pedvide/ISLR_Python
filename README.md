@@ -25,6 +25,8 @@ Dependencies:
  - patsy
  - matplotlib
  - seaborn
+ 
+I obtained the data from https://github.com/JWarmenhoven/ISLR-python.
 
 
 #### References: 
