@@ -7,9 +7,9 @@ List of Chapters:
 
 - [x] <A href='http://nbviewer.jupyter.org/github/pedvide/ISLR_Python/blob/master/Chapter3_Linear_regression.ipynb'>Chapter 3 - Linear Regression</A>
 - [x] <A href='http://nbviewer.jupyter.org/github/pedvide/ISLR_Python/blob/master/Chapter4_classification.ipynb'>Chapter 4 - Classification</A>
-- [x] <A href='http://nbviewer.jupyter.org/github/pedvide/ISLR_Python/blob/master/Chapter5_Resampling_Methods.ipynb'> Chapter 5 - Resampling Methods</A>
-- [x] <A href='http://nbviewer.jupyter.org/github/pedvide/ISLR_Python/blob/master/Chapter6_Linear_Model_Selection_and_Regularization.ipynb'> Chapter 6 - Linear Model Selection and Regularization</A>
-- [ ] Chapter 7 - Moving Beyond Linearity
+- [x] <A href='http://nbviewer.jupyter.org/github/pedvide/ISLR_Python/blob/master/Chapter5_Resampling_Methods.ipynb'>Chapter 5 - Resampling Methods</A>
+- [x] <A href='http://nbviewer.jupyter.org/github/pedvide/ISLR_Python/blob/master/Chapter6_Linear_Model_Selection_and_Regularization.ipynb'>Chapter 6 - Linear Model Selection and Regularization</A>
+- [x] <A href='http://nbviewer.jupyter.org/github/pedvide/ISLR_Python/blob/master/Chapter7_Moving_Beyond_Linearity.ipynb'>Chapter 7 - Moving Beyond Linearity</A>
 - [ ] Chapter 8 - Tree-Based Methods
 - [ ] Chapter 9 - Support Vector Machines
 - [ ] Chapter 10 - Unsupervised Learning
