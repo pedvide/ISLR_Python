@@ -76,8 +76,9 @@ def get_cubic_spline_basis(knots):
 
 class PatsySplineFeatures(TransformerMixin):
     
-    def __init__(self, knots, type='natural'):
+    def __init__(self, knots, df=None, type='natural'):
         self.knots = knots
+        self.df = df
         if type == 'natural':
             self.function = 'cr'
         elif type == 'bspline':
@@ -91,5 +92,6 @@ class PatsySplineFeatures(TransformerMixin):
         return self
 
     def transform(self, X):
-        features = dmatrix(f"{self.function}(x, knots=knots)", {"x": X, 'knots': self.knots}, return_type='dataframe')
+        options = 'df=df' if self.df else 'knots=knots'
+        features = dmatrix(f"{self.function}(x, {options})", {"x": X, 'knots': self.knots, 'df': self.df}, return_type='dataframe')
         return features.values
