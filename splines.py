@@ -4,11 +4,12 @@
 import numpy as np
 import scipy.interpolate as si
 from sklearn.base import TransformerMixin
+from sklearn.base import BaseEstimator, RegressorMixin
 from patsy import dmatrix
 
 
 class BSplineFeatures(TransformerMixin):
-    '''Works, but it's not a natural spline'''
+    '''Cubic splines using scipy'''
     def __init__(self, knots, degree=3, periodic=False):
         self.bsplines = self.get_bspline_basis(knots, degree, periodic=periodic)
         self.nsplines = len(self.bsplines)
@@ -41,7 +42,7 @@ class BSplineFeatures(TransformerMixin):
 
 
 class NaturalSplineFeatures(TransformerMixin):
-    ''' '''
+    '''Cubic natural splines using scipy. Not really natural splines yet'''
     def __init__(self, knots, degree=3, periodic=False):
         self.natsplines = self.get_natural_spline_basis(knots, degree, periodic=periodic)
         self.nsplines = len(self.natsplines)
@@ -74,7 +75,7 @@ class NaturalSplineFeatures(TransformerMixin):
 
 
 class PatsySplineFeatures(TransformerMixin):
-    
+    '''Cubic splines (natural or bspline) using patsy'''
     def __init__(self, knots=None, df=None, type='natural'):
         '''Either knots or df is required'''
         self.knots = knots
@@ -96,3 +97,25 @@ class PatsySplineFeatures(TransformerMixin):
         features = dmatrix(f"{self.function}(x, {options})", {"x": X, 'knots': self.knots, 
                                                               'df': self.df}, return_type='dataframe')
         return features.values
+
+    
+class SmoothingSpline(BaseEstimator, RegressorMixin):
+    '''Smoothing cubic splines estimator using scipy'''
+    def __init__(self, s=0):
+        self.s = s
+    
+    def fit(self, X, y):
+        X_unique, unq_idx, unq_inv, unq_cnt = np.unique(X, return_index=True, return_inverse=True, return_counts=True)
+        y_unique_mean = np.bincount(unq_inv, y) / unq_cnt
+        self.smoothing_spline_ = si.UnivariateSpline(X_unique, y_unique_mean, s=self.s)
+        
+        # this should give the effective df of the model
+        # but doesn't work
+        #pred = smoothing_spline(X_unique).reshape((-1,1))
+        #np.trace(np.multiply(pred, y_unique_mean.reshape((-1,1))))
+        self.df_ = len(self.smoothing_spline_.get_knots())
+        return self
+    
+    def predict(self, X, y=None):
+        return self.smoothing_spline_(X)
+    
