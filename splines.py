@@ -3,8 +3,8 @@
 
 import numpy as np
 import scipy.interpolate as si
-from sklearn.base import TransformerMixin
-from sklearn.base import BaseEstimator, RegressorMixin
+from sklearn.base import BaseEstimator, TransformerMixin, RegressorMixin
+from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from patsy import dmatrix
 
 
@@ -76,18 +76,18 @@ class NaturalSplineFeatures(TransformerMixin):
 
 class PatsySplineFeatures(TransformerMixin):
     '''Cubic splines (natural or bspline) using patsy'''
-    def __init__(self, knots=None, df=None, type='natural'):
+    def __init__(self, knots=None, df=None, spline_type=None):
         '''Either knots or df is required'''
         self.knots = knots
         self.df = df
-        if type == 'natural':
+        if spline_type == 'natural' or spline_type is None:
             self.function = 'cr'
-        elif type == 'bspline':
+        elif spline_type == 'bspline':
             self.function = 'bs'
-        elif type == 'cyclic':
+        elif spline_type == 'cyclic':
             self.function = 'cc'
         else:
-            raise AttributeError
+            raise AttributeError('Wrong spline type')
 
     def fit(self, X, y=None):
         return self
@@ -105,8 +105,14 @@ class SmoothingSpline(BaseEstimator, RegressorMixin):
         self.s = s
     
     def fit(self, X, y):
+        # Check that X and y have correct shape
+        X, y = check_X_y(X, y, y_numeric=True)
+        
+        self.X_ = X
+        self.y_ = y
+        
         X_unique, unq_idx, unq_inv, unq_cnt = np.unique(X, return_index=True, return_inverse=True, return_counts=True)
-        y_unique_mean = np.bincount(unq_inv, y) / unq_cnt
+        y_unique_mean = np.bincount(unq_inv, weights=y) / unq_cnt
         self.smoothing_spline_ = si.UnivariateSpline(X_unique, y_unique_mean, s=self.s)
         
         # this should give the effective df of the model
@@ -117,5 +123,11 @@ class SmoothingSpline(BaseEstimator, RegressorMixin):
         return self
     
     def predict(self, X, y=None):
+        # Check is fit had been called
+        check_is_fitted(self, ['X_', 'y_'])
+
+        # Input validation
+        X = check_array(X)
+
         return self.smoothing_spline_(X)
     
