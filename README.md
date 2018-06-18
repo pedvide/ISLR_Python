@@ -10,7 +10,7 @@ List of Chapters:
 - [x] <A href='http://nbviewer.jupyter.org/github/pedvide/ISLR_Python/blob/master/Chapter5_Resampling_Methods.ipynb'>Chapter 5 - Resampling Methods</A>
 - [x] <A href='http://nbviewer.jupyter.org/github/pedvide/ISLR_Python/blob/master/Chapter6_Linear_Model_Selection_and_Regularization.ipynb'>Chapter 6 - Linear Model Selection and Regularization</A>
 - [x] <A href='http://nbviewer.jupyter.org/github/pedvide/ISLR_Python/blob/master/Chapter7_Moving_Beyond_Linearity.ipynb'>Chapter 7 - Moving Beyond Linearity</A>
-- [ ] Chapter 8 - Tree-Based Methods
+- [x] <A href='http://nbviewer.jupyter.org/github/pedvide/ISLR_Python/blob/master/Chapter8_Tree_Based_Methods.ipynb'>Chapter 8 - Tree-Based Methods</A>
 - [ ] Chapter 9 - Support Vector Machines
 - [ ] Chapter 10 - Unsupervised Learning
 - [ ] Extra: Misclassification rate simulation - SVM and Logistic Regression</A><P>
@@ -25,6 +25,7 @@ Dependencies:
  - patsy
  - matplotlib
  - seaborn
+ - pyGAM
  
 I obtained the data from https://github.com/JWarmenhoven/ISLR-python.
 
