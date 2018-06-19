@@ -26,6 +26,7 @@ Dependencies:
  - matplotlib
  - seaborn
  - pyGAM
+ - pydot and graphviz (to plot decission trees)
  
 I obtained the data from https://github.com/JWarmenhoven/ISLR-python.
 
