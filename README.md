@@ -27,6 +27,7 @@ Dependencies:
  - seaborn
  - pyGAM
  - pydot and graphviz (to plot decission trees)
+ - scikit-plot (to plot ROC for classification)
  
 I obtained the data from https://github.com/JWarmenhoven/ISLR-python.
 
