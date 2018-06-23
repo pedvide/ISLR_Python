@@ -20,7 +20,7 @@ def print_classification_statistics(model, X_test, y_test, labels=None):
     print(df_cm)
     print()
     
-def plot_ROC(model, X_test, y_test, label=None):
+def plot_ROC(model, X_test, y_test, label=''):
     y_prob = model.predict_proba(X_test)
     ax = skplt.metrics.plot_roc(y_test, y_prob, plot_micro=False, plot_macro=False)
     ax.set_xlim([-0.01, 1.0])
