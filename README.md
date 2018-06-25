@@ -1,6 +1,6 @@
 # ISLR_Python
 
-Figures, Tables and Problems from the book <A target="_blank" href='http://www-bcf.usc.edu/%7Egareth/ISL/index.html'>'An Introduction to Statistical Learning with Applications in R'</A> by James, Witten, Hastie, Tibshirani (2013).<P>
+Figures, Tables and Problems from the book <A target="_blank" href='http://www-bcf.usc.edu/%7Egareth/ISL/index.html'>'An Introduction to Statistical Learning with Applications in R'</A> by James, Witten, Hastie, Tibshirani (2013).
 Using Python 3.x.
 
 List of Chapters:
@@ -13,7 +13,6 @@ List of Chapters:
 - [x] <A href='http://nbviewer.jupyter.org/github/pedvide/ISLR_Python/blob/master/Chapter8_Tree_Based_Methods.ipynb'>Chapter 8 - Tree-Based Methods</A>
 - [x] <A href='http://nbviewer.jupyter.org/github/pedvide/ISLR_Python/blob/master/Chapter9_Support_Vector_Machines.ipynb'>Chapter 9 - Support Vector Machines</A>
 - [ ] Chapter 10 - Unsupervised Learning
-- [ ] Extra: Misclassification rate simulation - SVM and Logistic Regression</A><P>
 
 Dependencies:
 
