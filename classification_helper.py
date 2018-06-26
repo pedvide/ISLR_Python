@@ -108,5 +108,5 @@ def plot_classification(model, X_test, y_test):
     est_region = model.predict(X)
 
     # regions
-    plt.contourf(xx, yy, est_region.reshape(xx.shape), cmap=plt.cm.coolwarm, alpha=0.5, linewidths=2);
+    plt.contourf(xx, yy, est_region.reshape(xx.shape), cmap=plt.cm.coolwarm, alpha=0.5);
     
