@@ -110,3 +110,4 @@ def plot_classification(model, X_test, y_test):
     # regions
     plt.contourf(xx, yy, est_region.reshape(xx.shape), cmap=plt.cm.coolwarm, alpha=0.5);
     
+    return ax
