@@ -14,8 +14,9 @@ def print_classification_statistics(model, X_test, y_test, labels=None):
     print(classification_report(y_test, y_pred, target_names=labels, digits=3))
     cm = confusion_matrix(y_test, y_pred)
     cm = cm.astype('float')/cm.sum(axis=1)[:, np.newaxis]
-    df_cm = pd.DataFrame(cm, columns=pd.MultiIndex.from_product([['Predicted'],['True', 'False']]),
-                         index=pd.MultiIndex.from_product([['Real'],['True', 'False']]))
+    num_class = len(cm)
+    df_cm = pd.DataFrame(cm, columns=pd.MultiIndex.from_product([['Predicted'], np.arange(0, num_class)]),
+                         index=pd.MultiIndex.from_product([['Real'], np.arange(0, num_class)]))
     print('Confusion Matrix:')
     print(df_cm)
     print()
@@ -85,23 +86,26 @@ def plot_classification(model, X_test, y_test):
     fig = plt.figure(figsize=(8,8))
     ax = plt.subplot(1,1,1)
     
-    data1 = X_test[y_test==1]
-    data0 = X_test[y_test==0]
-    
+    if isinstance(X_test, pd.DataFrame):
+        X_cols = X_test.columns
+        X_test = X_test.values
+    else:
+        X_cols = ['', '']
+        
+    if isinstance(y_test, pd.DataFrame):
+        y_test = y_test.values
+        
     # Data
-    ax.scatter(data1.values[:,0], data1.values[:,1], s=20, c='red', marker='o', label='1')
-    ax.scatter(data0.values[:,0], data0.values[:,1], s=20, c='blue', marker='o', label='1')
-    ax.set_xlabel(data1.columns[0]);
-    ax.set_ylabel(data1.columns[1]);
+    ax.scatter(X_test[:,0], X_test[:,1], c=y_test, cmap=plt.cm.coolwarm, s=20, edgecolors='k')
+    ax.set_xlabel(X_cols[0]);
+    ax.set_ylabel(X_cols[1]);
     
-    maxX1, maxX2 = X_test.max()
-    minX1, minX2 = X_test.min()
+    maxX1, maxX2 = np.max(X_test, axis=0)
+    minX1, minX2 = np.min(X_test, axis=0)
     N_points_grid = 200
     xx, yy = np.meshgrid(np.linspace(minX1, maxX1, N_points_grid), np.linspace(minX2, maxX2, N_points_grid))
     X = np.c_[xx.ravel(), yy.ravel()]
-    est_region0 = model.predict(X) > 0
-    est_region1 = np.logical_not(est_region0)
+    est_region = model.predict(X)
 
-    # LDA regions
-    plt.contourf(xx, yy, est_region1.reshape(xx.shape), alpha=0.5, colors='red', levels=[0.5, 1.0])
-    plt.contourf(xx, yy, est_region0.reshape(xx.shape), alpha=0.5, colors='blue', levels=[0.5, 1.0]);
+    # regions
+    plt.contourf(xx, yy, est_region.reshape(xx.shape), cmap=plt.cm.coolwarm, alpha=0.5);
