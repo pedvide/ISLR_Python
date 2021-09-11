@@ -1,11 +1,14 @@
-def plot_lm(model_fit, data, key, n=3):
-    import numpy as np
-    import pandas as pd
-    import seaborn as sns
-    import matplotlib.pyplot as plt
-    import statsmodels.formula.api as smf
+import warnings
 
-    from statsmodels.graphics.gofplots import ProbPlot
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+import statsmodels.formula.api as smf
+from statsmodels.graphics.gofplots import ProbPlot
+
+def plot_lm(model_fit, data, key, n=3):
     
     # fitted values (need a constant term for intercept)
     model_fitted_y = model_fit.fittedvalues
@@ -29,7 +32,7 @@ def plot_lm(model_fit, data, key, n=3):
     # first plot
     plot_lm_1 = plt.subplot(2, 2, 1)
 
-    temp_plot = sns.residplot(model_fitted_y, key, data=data, 
+    temp_plot = sns.residplot(x=model_fitted_y, y=key, data=data, 
                               lowess=True, 
                               scatter_kws={'alpha': 0.5}, 
                               line_kws={'color': 'red', 'lw': 1, 'alpha': 0.8})
@@ -48,7 +51,10 @@ def plot_lm(model_fit, data, key, n=3):
     # second plot
     plot_lm_2 = plt.subplot(2, 2, 2)
     QQ = ProbPlot(model_norm_residuals)
-    temp_plot = QQ.qqplot(line='45', alpha=0.5, color='#4C72B0', lw=1, ax=plot_lm_2)
+    
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        temp_plot = QQ.qqplot(line='45', alpha=0.5, color='lightblue', lw=1, ax=plot_lm_2)
 
     plot_lm_2.set_title('Normal Q-Q')
     plot_lm_2.set_xlabel('Theoretical Quantiles')
@@ -64,8 +70,8 @@ def plot_lm(model_fit, data, key, n=3):
     # third plot
     plot_lm_3 = plt.subplot(2, 2, 3)
 
-    plt.scatter(model_fitted_y, model_norm_residuals_abs_sqrt, alpha=0.5)
-    sns.regplot(model_fitted_y, model_norm_residuals_abs_sqrt, 
+    plt.scatter(x=model_fitted_y, y=model_norm_residuals_abs_sqrt, alpha=0.5)
+    sns.regplot(x=model_fitted_y, y=model_norm_residuals_abs_sqrt, 
                 scatter=False, 
                 ci=False, 
                 lowess=True,
@@ -88,8 +94,8 @@ def plot_lm(model_fit, data, key, n=3):
     # fourth plot
     plot_lm_4 = plt.subplot(2, 2, 4)
 
-    plt.scatter(model_leverage, model_norm_residuals, alpha=0.5)
-    sns.regplot(model_leverage, model_norm_residuals, 
+    plt.scatter(x=model_leverage, y=model_norm_residuals, alpha=0.5)
+    sns.regplot(x=model_leverage, y=model_norm_residuals, 
                 scatter=False, 
                 ci=False, 
                 lowess=True,
