@@ -3,6 +3,8 @@ import warnings
 import numpy as np
 import pandas as pd
 import seaborn as sns
+
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import statsmodels.formula.api as smf
@@ -10,6 +12,9 @@ import statsmodels.api as sm
 from statsmodels.graphics.gofplots import ProbPlot
 
 from scipy.interpolate import UnivariateSpline
+
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.model_selection import train_test_split
 
 def add_margins(ax, x=0.05, y=0.05):
     # This will, by default, add 5% to the x and y margins. You 
@@ -191,3 +196,51 @@ def rss_contour(model, x_lim, y_lim, ax, levels=None):
     ax.set_xlabel(rf"$\beta_{{{model.model.exog_names[1]}}}$")
     ax.set_ylabel(rf"$\beta_{{{model.model.exog_names[2]}}}$")
 
+
+def compare_linear_knn(data_train, data_test, data_dense, ax):
+    model_linear = smf.ols("y ~ x", data=data_train).fit()
+    data_dense["y_linear"] = model_linear.predict(data_dense.x)
+    
+    data_dense["y_knn_1"] = (
+        KNeighborsRegressor(n_neighbors=1).fit(data_train.x.values.reshape(-1, 1), data_train.y)
+        .predict(data_dense.x.values.reshape(-1, 1))
+    )
+    data_dense["y_knn_9"] = (
+        KNeighborsRegressor(n_neighbors=9).fit(data_train.x.values.reshape(-1, 1), data_train.y)
+        .predict(data_dense.x.values.reshape(-1, 1))
+    )
+    
+    sns.lineplot(data=data_dense, x="x", y="y_linear", color="black", linestyle="--", ax=ax);
+    sns.lineplot(data=data_dense, x="x", y="y", color="black", ax=ax)
+    sns.lineplot(data=data_dense, x="x", y="y_knn_1", color="blue", lw=1, ax=ax);
+    sns.lineplot(data=data_dense, x="x", y="y_knn_9", color="red", lw=1, ax=ax);
+
+    
+def linear_knn_mse(X_train, y_train, X_test, y_test, ax):
+    X_train = sm.add_constant(X_train)
+    X_test = sm.add_constant(X_test)
+    model_linear = sm.OLS(y_train, X_train).fit()
+    linear_mse = ((model_linear.predict(X_test) - y_test)**2).sum()/len(y_test)
+    
+    Ks = np.linspace(1, 9, 9)
+    knn_mse = []
+    for K in Ks:
+        knn = KNeighborsRegressor(n_neighbors=int(K)).fit(X_train, y_train)
+        mse = ((knn.predict(X_test) - y_test)**2).sum()/len(y_test)
+        knn_mse.append(mse)
+
+    data_knn_mse = pd.DataFrame({"K": Ks, "MSE": knn_mse})
+    data_knn_mse["inv_K"] = 1/data_knn_mse["K"]
+    
+    ax.axhline(y=model_linear.mse_resid, color="black", linestyle="--")
+    sns.lineplot(data=data_knn_mse, x="inv_K", y="MSE", color="green", markers=True, linestyle="--", ax=ax);
+    sns.scatterplot(data=data_knn_mse, x="inv_K", y="MSE", color="green", ax=ax);
+    ax.set_xscale("log")
+    ax.set_xticks([0.2, 0.5, 1])
+    ax.get_xaxis().set_major_formatter(mpl.ticker.ScalarFormatter())
+    ax.set_ylim(bottom=0)
+    ax.set_xlabel("1/K");
+
+    
+def linear_knn_mse_one_var(data_train, data_test, ax):
+    linear_knn_mse(data_train.x.values, data_train.y, data_test.x.values, data_test.y, ax)
