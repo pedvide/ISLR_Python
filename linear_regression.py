@@ -6,127 +6,188 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 import statsmodels.formula.api as smf
+import statsmodels.api as sm
 from statsmodels.graphics.gofplots import ProbPlot
 
-def plot_lm(model_fit, data, key, n=3):
-    
-    # fitted values (need a constant term for intercept)
-    model_fitted_y = model_fit.fittedvalues
-    # model residuals
-    model_residuals = model_fit.resid
-    # normalized residuals
-    model_norm_residuals = model_fit.get_influence().resid_studentized_internal
-    # absolute squared normalized residuals
-    model_norm_residuals_abs_sqrt = np.sqrt(np.abs(model_norm_residuals))
-    # absolute residuals
-    model_abs_resid = np.abs(model_residuals)
-    # leverage, from statsmodels internals
-    model_leverage = model_fit.get_influence().hat_matrix_diag
-    # cook's distance, from statsmodels internals
-    model_cooks = model_fit.get_influence().cooks_distance[0]
-    
-    fig = plt.figure()
-    fig.set_figheight(8)
-    fig.set_figwidth(12)
-    
-    # first plot
-    plot_lm_1 = plt.subplot(2, 2, 1)
+from scipy.interpolate import UnivariateSpline
 
-    temp_plot = sns.residplot(x=model_fitted_y, y=key, data=data, 
-                              lowess=True, 
-                              scatter_kws={'alpha': 0.5}, 
-                              line_kws={'color': 'red', 'lw': 1, 'alpha': 0.8})
+def add_margins(ax, x=0.05, y=0.05):
+    # This will, by default, add 5% to the x and y margins. You 
+    # can customise this using the x and y arguments when you call it.
 
-    plot_lm_1.set_title('Residuals vs Fitted')
-    plot_lm_1.set_xlabel('Fitted values')
-    plot_lm_1.set_ylabel('Residuals')
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+
+    xmargin = (xlim[1]-xlim[0])*x
+    ymargin = (ylim[1]-ylim[0])*y
+
+    ax.set_xlim(xlim[0]-xmargin, xlim[1]+xmargin)
+    ax.set_ylim(ylim[0]-ymargin, ylim[1]+ymargin)
+    
+
+def residuals_vs_fitted(model, ax, show_quantiles=False, studentized=False):
+    if studentized:
+        residuals = model.get_influence().resid_studentized_internal
+    else:
+        residuals = model.resid
+    abs_resid = np.abs(residuals)
+    
+    data = pd.DataFrame({"y_fitted": model.fittedvalues, "resid": residuals, "abs_resid": abs_resid})
+    
+    sns.residplot(
+        data=data,
+        x="y_fitted", y="resid",
+        lowess=True, 
+        scatter_kws={'alpha': 0.5}, 
+        line_kws={'color': 'red', 'lw': 1, 'alpha': 0.8},
+        ax=ax
+    )
+    ax.axhline(y=2, linestyle="--", color="grey")
+    ax.axhline(y=-2, linestyle="--", color="grey")
+
+    ax.set_title('Residuals vs Fitted')
+    ax.set_xlabel('Fitted values')
+    ax.set_ylabel('Residuals')
 
     # annotations
-    abs_resid = model_abs_resid.sort_values(ascending=False)
-    abs_resid_top_3 = abs_resid[:3]
-
-    for i in abs_resid_top_3.index:
-        plot_lm_1.annotate(i, xy=(model_fitted_y[i], model_residuals[i]));
+    data = data.sort_values("abs_resid", ascending=False)
+    for i, row in data[:3].iterrows():
+        ax.annotate(i, xy=(row.y_fitted, row.resid));
         
-    # second plot
-    plot_lm_2 = plt.subplot(2, 2, 2)
-    QQ = ProbPlot(model_norm_residuals)
+    if show_quantiles:
+        data["y_fitted_bins"] = pd.cut(data.y_fitted, bins=10)
+        def quantiles(df):
+            d = {}
+            d['resid_q90'] = df.resid.quantile(0.9)
+            d['resid_q10'] = df.resid.quantile(0.1)
+            return pd.Series(d, index=['resid_q10', 'resid_q90'])
+        data = (
+            data.set_index("y_fitted_bins")
+            .join(data.groupby("y_fitted_bins").apply(quantiles)).sort_values("y_fitted")
+        )
+        
+        xs = np.linspace(data.y_fitted.min(), data.y_fitted.max(), 1000)
+        q_90 = UnivariateSpline(x=data.y_fitted, y=data.resid_q90, k=3)(xs)
+        q_10 = UnivariateSpline(x=data.y_fitted, y=data.resid_q10, k=3)(xs)
+        sns.lineplot(x=xs, y=q_10, color="blue", label="Quantiles 10-90", ax=ax)
+        sns.lineplot(x=xs, y=q_90, color="blue", ax=ax)
+        ax.legend()
+        
+    add_margins(ax)
+    sns.despine()
+
+
+def residuals_autocorrelation(model, ax):
+    sm.graphics.tsa.plot_pacf(
+        model.resid, lags=20, ax=ax,
+        title="Partial autocorrelation of residuals", zero=False
+    )
+    sns.despine()
+
+
+def residuals_normality(model, ax):
+    std_resid = model.get_influence().resid_studentized_internal
+    QQ = ProbPlot(std_resid)
     
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        temp_plot = QQ.qqplot(line='45', alpha=0.5, color='lightblue', lw=1, ax=plot_lm_2)
+        QQ.qqplot(line='45', alpha=0.5, color='lightblue', lw=1, ax=ax)
 
-    plot_lm_2.set_title('Normal Q-Q')
-    plot_lm_2.set_xlabel('Theoretical Quantiles')
-    plot_lm_2.set_ylabel('Standardized Residuals');
+    ax.set_title('Normal Q-Q')
+    ax.set_xlabel('Theoretical Quantiles')
+    ax.set_ylabel('Standardized Residuals');
 
     # annotations
-    abs_norm_resid = np.flip(np.argsort(np.abs(model_norm_residuals)), 0)
-    abs_norm_resid_top_3 = abs_norm_resid[:3]
+    abs_std_resid = np.flip(np.argsort(np.abs(std_resid)), 0)
+    abs_std_resid_top_3 = abs_std_resid[:3]
 
-    for r, i in enumerate(abs_norm_resid_top_3):
-        plot_lm_2.annotate(i, xy=(np.flip(QQ.theoretical_quantiles, 0)[r],model_norm_residuals[i]));
+    for r, i in enumerate(abs_std_resid_top_3):
+        ax.annotate(i, xy=(np.flip(QQ.theoretical_quantiles, 0)[r], std_resid[i]));
         
-    # third plot
-    plot_lm_3 = plt.subplot(2, 2, 3)
 
-    plt.scatter(x=model_fitted_y, y=model_norm_residuals_abs_sqrt, alpha=0.5)
-    sns.regplot(x=model_fitted_y, y=model_norm_residuals_abs_sqrt, 
-                scatter=False, 
-                ci=False, 
-                lowess=True,
-                line_kws={'color': 'red', 'lw': 1, 'alpha': 0.8})
+def leverage(model, ax):
+    
+    std_residuals = model.get_influence().resid_studentized_internal
+    leverage = model.get_influence().hat_matrix_diag
+    # cook's distance, from statsmodels internals
+    cooks_distance = model.get_influence().cooks_distance[0]
+    
+#     plt.scatter(x=leverage, y=std_residuals, alpha=0.5)
+    sns.regplot(
+        x=leverage, y=std_residuals, 
+        scatter=True, 
+        ci=False, 
+        lowess=True,
+        scatter_kws={'alpha': 0.5},
+        line_kws={'color': 'red', 'lw': 1, 'alpha': 0.8},
+        ax=ax
+    )
 
-    plot_lm_3.set_title('Scale-Location')
-    plot_lm_3.set_xlabel('Fitted values')
-    plot_lm_3.set_ylabel('$\sqrt{|Standardized Residuals|}$');
-
-    # annotations
-    abs_sq_norm_resid = np.flip(np.argsort(model_norm_residuals_abs_sqrt), 0)
-    abs_sq_norm_resid_top_3 = abs_sq_norm_resid[:3]
-
-    for i in abs_norm_resid_top_3:
-        try:
-            plot_lm_3.annotate(i, xy=(model_fitted_y[i], model_norm_residuals_abs_sqrt[i]));
-        except KeyError as err:
-            continue
-        
-    # fourth plot
-    plot_lm_4 = plt.subplot(2, 2, 4)
-
-    plt.scatter(x=model_leverage, y=model_norm_residuals, alpha=0.5)
-    sns.regplot(x=model_leverage, y=model_norm_residuals, 
-                scatter=False, 
-                ci=False, 
-                lowess=True,
-                line_kws={'color': 'red', 'lw': 1, 'alpha': 0.8})
-
-    plot_lm_4.set_xlim(0, 0.20)
-    plot_lm_4.set_ylim(-3, 5)
-    plot_lm_4.set_title('Residuals vs Leverage')
-    plot_lm_4.set_xlabel('Leverage')
-    plot_lm_4.set_ylabel('Standardized Residuals')
+    ax.set_xlim(leverage.min()*0.9, leverage.max())
+    ax.set_ylim(std_residuals.min(), std_residuals.max())
+    ax.set_title('Residuals vs Leverage')
+    ax.set_xlabel('Leverage')
+    ax.set_ylabel('Standardized Residuals')
 
     # annotations
-    leverage_top_3 = np.flip(np.argsort(model_cooks), 0)[:3]
+    leverage_top_3 = np.flip(np.argsort(cooks_distance), 0)[:3]
 
     for i in leverage_top_3:
-        plot_lm_4.annotate(i, xy=(model_leverage[i], model_norm_residuals[i]))
+        ax.annotate(i, xy=(leverage[i], std_residuals[i]))
 
-    # shenanigans for cook's distance contours
+    df_model = model.df_model
+    n = len(leverage)
+    cooks_threshold = 4/(n - df_model - 1)
+    leverage_threshold = 4 * (df_model)/n
+    
+    ax.axvline(
+        x=leverage_threshold, 
+        label=f"Leverage threshold ({leverage_threshold:.3f})",
+        color="grey", linestyle="--"
+    )
+    # cook's distance contours
     def graph(formula, x_range, label=None):
         x = x_range
         y = formula(x)
-        plt.plot(x, y, label=label, lw=1, ls='--', color='red')
+        ax.plot(x, y, label=label, lw=1, ls='--', color='red')
 
-    p = len(model_fit.params) # number of model parameters
-
-    graph(lambda x: np.sqrt((0.5 * p * (1 - x)) / x), 
-          np.linspace(0.001, 0.200, 50), 
-          'Cook\'s distance') # 0.5 line
-    graph(lambda x: np.sqrt((1 * p * (1 - x)) / x), 
-          np.linspace(0.001, 0.200, 50)) # 1 line
-    plt.legend(loc='upper right');
-    plt.xlim(xmax=np.max(model_cooks))
+    graph(lambda leverage: np.sqrt((cooks_threshold * df_model * (1 - leverage)) / leverage), 
+          np.linspace(leverage.min()*0.9, leverage.max(), 1000), 
+          f'Cook\'s distance threshold ({cooks_threshold:.2f})')
+    graph(lambda leverage: -np.sqrt((cooks_threshold * df_model * (1 - leverage)) / leverage), 
+          np.linspace(leverage.min()*0.9, leverage.max(), 1000))
     
-    plt.tight_layout()
+    ax.legend(loc='upper right');
+    add_margins(ax)
+
+
+def rss_contour(model, x_lim, y_lim, ax, levels=None):
+    
+    def rss(model, beta_x1, beta_x2):
+        x1 = model.model.exog[:, 1]
+        x2 = model.model.exog[:, 2]
+        y = model.model.endog
+        return ((y[:, np.newaxis, np.newaxis] - model.params[0] 
+                 - x1[:, np.newaxis, np.newaxis]*beta_x1 - x2[:, np.newaxis, np.newaxis]*beta_x2
+                )**2).sum(axis=0)/1e6
+
+    N = 100
+    x = np.linspace(*x_lim, N)
+    y = np.linspace(*y_lim, N)
+
+    X, Y = np.meshgrid(x, y)
+    Z = rss(model, X, Y)
+    
+    beta_x1 = model.params[1]
+    beta_x2 = model.params[2]
+    
+    ax.scatter(x=beta_x1, y=beta_x2, color="black")
+    ax.hlines(y=beta_x2, xmin=x_lim[0], xmax=beta_x1, colors="black", linestyles="dashed")
+    ax.vlines(x=beta_x1, ymin=y_lim[0], ymax=beta_x2, colors="black", linestyles="dashed")
+    
+    cplot = ax.contour(X, Y, Z, levels=levels, colors='blue');
+    ax.clabel(cplot, inline=True, fontsize=10)
+    
+    ax.set_xlabel(rf"$\beta_{{{model.model.exog_names[1]}}}$")
+    ax.set_ylabel(rf"$\beta_{{{model.model.exog_names[2]}}}$")
+
