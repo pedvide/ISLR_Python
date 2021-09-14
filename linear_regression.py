@@ -196,6 +196,15 @@ def scale_location(model, ax):
     for i, row in data[:3].iterrows():
         ax.annotate(i, xy=(row.y_fitted, row.sq_abs_std_residuals));
             
+def variance_inflation_factors(model):
+    exog_df = pd.DataFrame(model.model.exog, columns=model.model.exog_names)
+    leave_one_out_R2 = [
+        sm.OLS(exog_df[col].values, exog_df.loc[:, exog_df.columns != col].values).fit().rsquared 
+        for col in exog_df
+        if col != "Intercept"
+    ]
+    vifs = pd.Series([1 / (1. - R2) for R2 in leave_one_out_R2], index=exog_df.columns[1:], name='VIF')
+    return vifs
 
 def rss_contour(model, x_lim, y_lim, ax, levels=None):
     
