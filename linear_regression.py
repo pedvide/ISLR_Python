@@ -16,6 +16,7 @@ from scipy.interpolate import UnivariateSpline
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.model_selection import train_test_split
 
+
 def add_margins(ax, x=0.05, y=0.05):
     # This will, by default, add 5% to the x and y margins. You 
     # can customise this using the x and y arguments when you call it.
@@ -47,8 +48,9 @@ def residuals_vs_fitted(model, ax, show_quantiles=False, studentized=False):
         line_kws={'color': 'red', 'lw': 1, 'alpha': 0.8},
         ax=ax
     )
-    ax.axhline(y=2, linestyle="--", color="grey")
-    ax.axhline(y=-2, linestyle="--", color="grey")
+    if studentized:
+        ax.axhline(y=2, linestyle="--", color="grey")
+        ax.axhline(y=-2, linestyle="--", color="grey")
 
     ax.set_title('Residuals vs Fitted')
     ax.set_xlabel('Fitted values')
@@ -165,6 +167,35 @@ def leverage(model, ax):
     ax.legend(loc='upper right');
     add_margins(ax)
 
+
+def scale_location(model, ax):
+
+    # normalized residuals
+    std_residuals = model.get_influence().resid_studentized_internal
+    # absolute squared normalized residuals
+    sq_abs_std_residuals = np.sqrt(np.abs(std_residuals))
+    data = pd.DataFrame({"y_fitted": model.fittedvalues, "sq_abs_std_residuals": sq_abs_std_residuals})
+
+    sns.regplot(
+        data=data,
+        x="y_fitted", y="sq_abs_std_residuals", 
+        scatter=True, 
+        ci=False, 
+        lowess=True,
+        line_kws={'color': 'red', 'lw': 1, 'alpha': 0.8},
+        scatter_kws=dict(alpha=0.5),
+        ax=ax
+    )
+
+    ax.set_title('Scale-Location')
+    ax.set_xlabel('Fitted values')
+    ax.set_ylabel('$\sqrt{|Standardized Residuals|}$');
+
+    # annotations    
+    data = data.sort_values("sq_abs_std_residuals", ascending=False)
+    for i, row in data[:3].iterrows():
+        ax.annotate(i, xy=(row.y_fitted, row.sq_abs_std_residuals));
+            
 
 def rss_contour(model, x_lim, y_lim, ax, levels=None):
     
