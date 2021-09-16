@@ -1,5 +1,5 @@
 import numpy as np
-import scikitplot as skplt
+# import scikitplot as skplt
 import sklearn.linear_model as skl_lm
 from sklearn.metrics import confusion_matrix, classification_report, precision_score, roc_curve, auc, log_loss
 import pandas as pd
