@@ -6,3 +6,4 @@ scikit-learn
 statsmodels
 matplotlib
 seaborn
+ipywidgets
