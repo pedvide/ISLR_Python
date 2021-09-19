@@ -7,3 +7,4 @@ statsmodels
 matplotlib
 seaborn
 ipywidgets
+ipympl
