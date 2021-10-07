@@ -1,36 +1,26 @@
 import numpy as np
 # import scikitplot as skplt
 import sklearn.linear_model as skl_lm
-from sklearn.metrics import confusion_matrix, classification_report, precision_score, roc_curve, auc, log_loss
+from sklearn.metrics import confusion_matrix, log_loss
 import pandas as pd
 import matplotlib.pyplot as plt
 
 from scipy import stats
 
 # Helper functions to print classification diagnostics
-def print_classification_statistics(model, X_test, y_test, labels=None):
+def get_confusion_matrix(model, X_test, y_test, labels=None, norm=None):
     y_pred = model.predict(X_test)
-    print('Classification Report:')
-    print(classification_report(y_test, y_pred, target_names=labels, digits=3))
-    cm = confusion_matrix(y_test, y_pred)
-    cm = cm.astype('float')/cm.sum(axis=1)[:, np.newaxis]
+    cm = confusion_matrix(y_test, y_pred, labels=labels, normalize=norm)
     num_class = len(cm)
-    df_cm = pd.DataFrame(cm, columns=pd.MultiIndex.from_product([['Predicted'], np.arange(0, num_class)]),
-                         index=pd.MultiIndex.from_product([['Real'], np.arange(0, num_class)]))
-    print('Confusion Matrix:')
-    print(df_cm)
-    print()
-    
-def plot_ROC(model, X_test, y_test, label=''):
-    y_prob = model.predict_proba(X_test)
-    ax = skplt.metrics.plot_roc(y_test, y_prob, plot_micro=False, plot_macro=False)
-    ax.set_xlim([-0.01, 1.0])
-    ax.set_ylim([0.0, 1.05])
-    
-    handles, labels = ax.get_legend_handles_labels()
-    if len(labels) > 0:
-        labels[0] = labels[0].replace('ROC curve of class 1', label)
-    ax.legend(handles, labels, loc="lower right")
+    labels = labels or np.arange(0, num_class)
+    df_cm = pd.DataFrame(cm, columns=pd.MultiIndex.from_product([['Predicted'], labels]),
+                         index=pd.MultiIndex.from_product([['Real'], labels])).T
+    df_cm.loc[("Predicted", "Total"), :] = df_cm.sum(axis=0)
+    df_cm.loc[:, ("Real", "Total")] = df_cm.sum(axis=1)
+    if not norm:
+        df_cm = df_cm.astype("int")
+    return df_cm
+
     
 def print_OLS_error_table(model, X_train, y_train):
     params = np.append(model.intercept_, model.coef_)
