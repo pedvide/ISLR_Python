@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 from scipy import stats
 
 # Helper functions to print classification diagnostics
-def get_confusion_matrix(model, X_test, y_test, labels=None, norm=None):
-    y_pred = model.predict(X_test)
+def get_confusion_matrix(model, X_test, y_test, labels=None, norm=None, y_pred=None):
+    if y_pred is None:
+        y_pred = model.predict(X_test)
     cm = confusion_matrix(y_test, y_pred, labels=labels, normalize=norm)
     num_class = len(cm)
     labels = labels or np.arange(0, num_class)
