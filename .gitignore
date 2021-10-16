@@ -30,3 +30,6 @@ __pycache__/
 .venv
 
 .vscode
+
+.virtual_documents
+
