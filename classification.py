@@ -34,11 +34,11 @@ def print_OLS_error_table(model, X_train, y_train):
 
     if isinstance(X_train, pd.DataFrame):
         X_cols = X_train.columns
-        X_train = X_train.values
     else:
         X_cols = [f"Feature {num}" for num in range(1, len(X_train))]
 
-    newX = pd.DataFrame({"Constant": np.ones(len(X_train))}).join(pd.DataFrame(X_train))
+    newX = X_train.copy()
+    newX["Constant"] = np.ones(len(X_train))
 
     if isinstance(model, skl_lm.LinearRegression):
         # for linear regression:
@@ -87,7 +87,6 @@ def plot_classification(model, X_test, y_test):
 
     if isinstance(X_test, pd.DataFrame):
         X_cols = X_test.columns
-        X_test = X_test.values
     else:
         X_cols = ["", ""]
 
@@ -95,7 +94,7 @@ def plot_classification(model, X_test, y_test):
         y_test = y_test.values
 
     # Data
-    ax.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=plt.cm.coolwarm, s=20, edgecolors="k")
+    ax.scatter(X_test.values[:, 0], X_test.values[:, 1], c=y_test, cmap=plt.cm.coolwarm, s=20, edgecolors="k")
     ax.set_xlabel(X_cols[0])
     ax.set_ylabel(X_cols[1])
 
