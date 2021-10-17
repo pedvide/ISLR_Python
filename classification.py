@@ -82,8 +82,7 @@ def print_OLS_error_table(model, X_train, y_train):
 
 
 def plot_classification(model, X_test, y_test):
-    fig = plt.figure(figsize=(8, 8))
-    ax = plt.subplot(1, 1, 1)
+    fig, ax = plt.subplots(ncols=1, figsize=(8, 8))
 
     if isinstance(X_test, pd.DataFrame):
         X_cols = X_test.columns
@@ -103,9 +102,9 @@ def plot_classification(model, X_test, y_test):
     N_points_grid = 200
     xx, yy = np.meshgrid(np.linspace(minX1, maxX1, N_points_grid), np.linspace(minX2, maxX2, N_points_grid))
     X = np.c_[xx.ravel(), yy.ravel()]
-    est_region = model.predict(X)
+    est_region = model.predict(pd.DataFrame(X, columns=X_cols))
 
     # regions
-    plt.contourf(xx, yy, est_region.reshape(xx.shape), cmap=plt.cm.coolwarm, alpha=0.5)
+    plt.contourf(xx, yy, est_region.reshape(xx.shape), cmap=plt.cm.coolwarm, alpha=0.3)
 
     return ax
